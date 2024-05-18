@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import boto3
 from botocore.exceptions import ClientError
+import logging
 
 """
 All of these params below should be in a .env file loaded with load_dotenv()
@@ -14,9 +15,7 @@ ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID")
 SECRET_ACCESS_KEY_ID = os.getenv("SECRET_ACCESS_KEY_ID")
 ENDPOINT_URL_DEFAULT = os.getenv("ENDPOINT_URL_DEFAULT")
 REGION_NAME = os.getenv("REGION_NAME")
-"""
 
-"""
 These are dummy place holder params
 You should get real params from CloudFlare R2 after creating your bucket
 and your API Key at CloudFlare Dashboard
@@ -83,3 +82,20 @@ def create_upload_file(file: UploadFile):
         return object_information
     except ClientError as error:
         raise error
+    
+@app.get("/create_presigned_url/{bucket_name}/{object_name}")
+def create_presigned_url(bucket_name, object_name):
+    # Generate a presigned URL for the S3 object
+    expiration=10
+    try:
+        response = s3.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': bucket_name,
+                'Key': object_name,
+                },
+            ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+    return response
