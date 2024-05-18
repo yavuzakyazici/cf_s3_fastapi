@@ -2,6 +2,9 @@ Here is an example CloudFlare R2, S3 compatible storage bucket working with Fast
 I had trouble finding a good example so here it is.
 I hope this helps someone..
 
+I also added create_presigned_url method in case you don't want your bucket content to be public,
+and you still want to access it thru API. PresignedUrl expires in seconds ( here 10 seconds). So your client app can consume the link but it will be invalid in 10 secs ( or more if you want).
+
 to get started..
 clone the repo and..
 pip install -r requirements.txt
