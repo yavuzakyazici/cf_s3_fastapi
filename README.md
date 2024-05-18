@@ -93,4 +93,21 @@ def create_upload_file(file: UploadFile):
     except ClientError as error:
         raise error
 
+@app.get("/create_presigned_url/{bucket_name}/{object_name}")
+def create_presigned_url(bucket_name, object_name):
+    # Generate a presigned URL for the S3 object
+    expiration=10
+    try:
+        response = s3.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': bucket_name,
+                'Key': object_name,
+                },
+            ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+    return response
+
 ```
