@@ -1,116 +1,85 @@
-Here is an example CloudFlare R2, S3 compatible storage bucket working with FastAPI.
-I had trouble finding a good example so here it is.
-I hope this helps someone..
+# ☁️ FastAPI + Cloudflare R2 (S3-Compatible) File Upload API
 
-I also added create_presigned_url method in case you don't want your bucket content to be public,
-and you still want to access it thru API. PresignedUrl expires in seconds ( here 10 seconds). So your client app can consume the link but it will be invalid in 10 secs ( or more if you want).
+Minimal FastAPI project demonstrating secure file uploads and retrievals using **Cloudflare R2** (Amazon S3-compatible API) via **Boto3**.
 
-to get started..
-clone the repo and..
+---
+
+## 🔧 Tech Stack
+
+- **FastAPI** – Web framework
+- **Boto3** – AWS-compatible SDK for Python
+- **Cloudflare R2** – S3-compatible object storage
+- **Pydantic** – Data validation
+- **Uvicorn** – ASGI server
+
+---
+
+## 📂 Features
+
+- Upload files to a private Cloudflare R2 bucket
+- Retrieve download URLs securely
+- Uses signed S3-compatible requests
+- Compatible with AWS S3 if R2 keys are swapped
+- Simple local `.env` setup for API keys and config
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/yavuzakyazici/cf_s3_fastapi.git
+cd cf_s3_fastapi
+```
+2. Create a virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate    # or venv\Scripts\activate on Windows
+```
+3. Install dependencies
+```bash
 pip install -r requirements.txt
+```
+4. Create a .env file
+```env
+R2_ACCESS_KEY=your_r2_access_key
+R2_SECRET_KEY=your_r2_secret_key
+R2_ENDPOINT=https://your_r2_endpoint
+R2_BUCKET_NAME=your_bucket_name
+```
+⚠️ Do NOT commit .env — it's in .gitignore
 
-```py
-from fastapi import FastAPI, UploadFile
-import os
-from dotenv import load_dotenv
-import boto3
-from botocore.exceptions import ClientError
+5. Run the server
+```bash
+uvicorn main:app --reload
+```
+Visit http://localhost:8000/docs for Swagger UI.
 
-"""
-All of these params below should be in a .env file loaded with load_dotenv()
-
-load_dotenv()
-
-R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME")
-ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID")
-SECRET_ACCESS_KEY_ID = os.getenv("SECRET_ACCESS_KEY_ID")
-ENDPOINT_URL_DEFAULT = os.getenv("ENDPOINT_URL_DEFAULT")
-REGION_NAME = os.getenv("REGION_NAME")
-"""
-
-"""
-These are dummy place holder params
-You should get real params from CloudFlare R2 after creating your bucket
-and your API Key at CloudFlare Dashboard
-This example obivously will NOT work before creating your bucket and getting API key
-"""
-R2_BUCKET_NAME = "My_Bucket_Name"
-ACCESS_KEY_ID = "My_Access_Key_Id"
-SECRET_ACCESS_KEY_ID = "My_Secret_Access_Key_Id"
-ENDPOINT_URL_DEFAULT = "My_Endpoint_Url_Default"
-REGION_NAME = "auto"
-
-
-app = FastAPI()
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to CloudFlare R2 Boto3 example"}
-
-
-"""
-create your boto3 client
-"""
-s3 = boto3.client(
-    service_name ="s3",
-    endpoint_url = ENDPOINT_URL_DEFAULT,
-    aws_access_key_id = ACCESS_KEY_ID,
-    aws_secret_access_key = SECRET_ACCESS_KEY_ID,
-    region_name=REGION_NAME, # Must be one of: wnam, enam, weur, eeur, apac, auto
-)
-
-"""
-you can get your file info before downloading
-"""
-@app.get("/get_file_info/{folder_name}/{file_name}")
-async def get_file_info(folder_name:str, file_name:str):
-    try:
-        if folder_name is not None:
-            # this is a wrokaround since FastAPI does not accept / characters
-            # or rather sees it as @app.get request path and returns 404
-            # if you have deeper folder structure either use different buckets or modify this code
-            folder_name = f"{folder_name}/"
-        object_information = s3.head_object(Bucket=R2_BUCKET_NAME, Key=f"{folder_name}{file_name}")
-        return object_information
-    except ClientError as error:
-        raise error
-
-
-@app.get("/download/{file_name}")
-async def download(file_name:str):
-    try:
-        s3.download_file(Bucket=R2_BUCKET_NAME, Key=f"{file_name}", Filename=f"{file_name}" )
-        object_information = s3.head_object(Bucket=R2_BUCKET_NAME, Key=f"{file_name}")
-        return object_information
-    except ClientError as error:
-        raise error
-
-
-@app.post("/upload/")
-def create_upload_file(file: UploadFile):
-    try:
-        f_name = file.filename
-        s3.upload_fileobj(file.file, R2_BUCKET_NAME, f_name)
-        object_information = s3.head_object(Bucket=R2_BUCKET_NAME, Key=f"{f_name}")
-        return object_information
-    except ClientError as error:
-        raise error
-
-@app.get("/create_presigned_url/{bucket_name}/{object_name}")
-def create_presigned_url(bucket_name, object_name):
-    # Generate a presigned URL for the S3 object
-    expiration=10
-    try:
-        response = s3.generate_presigned_url(
-            'get_object',
-            Params={
-                'Bucket': bucket_name,
-                'Key': object_name,
-                },
-            ExpiresIn=expiration)
-    except ClientError as e:
-        logging.error(e)
-        return None
-    return response
+🧪 Example API Usage
+Upload File
+```bash
+POST /upload
+FormData: file (binary)
+```
+List Files (optional)
+```bash
+GET /files
 
 ```
+Get File URL
+
+```bash
+GET /files/{filename}
+```
+
+## 📎 Notes
+-  Cloudflare R2 is S3-compatible, but faster for public delivery
+-  You can easily swap in AWS S3 by changing credentials + endpoint
+-  Safe for client-side integration (mobile/web uploads)
+
+
+👤 Author
+Yavuz Akyazıcı – Full-stack developer & creator of [Jazz-A-Minute (JAM)](https://jazzaminute.com/)
+
+This project is a simplified demo version of the backend streaming logic used in JAM.
