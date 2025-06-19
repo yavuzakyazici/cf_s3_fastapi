@@ -80,6 +80,6 @@ GET /files/{filename}
 
 
 👤 Author
-Yavuz Akyazıcı – Full-stack developer & creator of Jazz-A-Minute (JAM)-[iOS](https://apps.apple.com/tr/app/j-a-m/id6504705021) - [Android](https://play.google.com/store/apps/details?id=com.jazzaminute&hl=en)
+Yavuz Akyazıcı – Full-stack developer & creator of Jazz-A-Minute (JAM) - [iOS](https://apps.apple.com/tr/app/j-a-m/id6504705021) & [Android](https://play.google.com/store/apps/details?id=com.jazzaminute&hl=en)
 
 This project is a simplified demo version of the backend streaming logic used in JAM.
